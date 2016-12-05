@@ -1,8 +1,10 @@
-enchant(); // initialize
-var game = new Core(1000, 562); // game stage
+enchant();
+
+var game = new Core(1000, 562);
 game.preload('images/Player_Sprite.png');
 game.preload('images/jimen.png');
 game.fps = 20;
+var GROUND_HEIGHT = 85;
 
 game.onload = function(){
     var ground = new Sprite(1000, 85);
@@ -11,67 +13,60 @@ game.onload = function(){
     ground.y = 562 - 85;
     game.rootScene.addChild(ground);
     game.keybind(90, 'a');
-
-    var player = new Sprite(64, 64);
-    player.image = game.assets['images/Player_Sprite.png'];
     game.rootScene.backgroundColor = 'black';
-    game.rootScene.addChild(player);
-    player.y = 562 - 85 - 64;
-    game.rootScene.addEventListener('enterframe', function(){
+
+    var pad = new APad();
+    pad.y = 454;
+    game.rootScene.addChild(pad);
+
+    var player2 = new Player(500, 200, pad);
+
+};
+
+var Player = Class.create(Sprite, {
+    initialize: function(x, y, pad){
+        Sprite.call(this, 64, 64);
+        this.image = game.assets['images/Player_Sprite.png'];
+        this.x = x;
+        this.y = y;
+        this.pad = pad;
+        game.rootScene.addChild(this);
+    },
+    onenterframe: function(){
+        console.log(this.pad.vx);
         if(game.input.a){
-            player.frame = [2];
+            this.frame = [2];
             if(game.input.right){
-                player.scaleX = 1;
-                player.x += 5;
+                this.scaleX = 1;
+                this.x += 5;
             }else if(game.input.left){
-                // player.scaleX = - 1;
-                player.x -= 5;
+                this.x -= 5;
             }else if(game.input.up){
-                player.y -= 5;
+                this.y -= 5;
             }else if(game.input.down){
-                if(player.y < 562 - 85 - 64){
-                    player.y += 5;
+                if(this.y < 562 - GROUND_HEIGHT - 64){
+                    this.y += 5;
                 }else{
-                    player.y = 562 - 85 - 64;
+                    this.y = 562 - GROUND_HEIGHT - 64;
                 }
             }
         }else if(game.input.right){
-            player.frame = [0, 0, 0, 1, 1, 1];
-            player.scaleX = 1;
-            player.x += 5;
+            this.frame = [0, 0, 0, 1, 1, 1];
+            this.scaleX = 1;
+            this.x += 5;
         }else if(game.input.left){
-            player.frame = [0, 0, 0, 1, 1, 1];
-            player.scaleX = - 1;
-            player.x -= 5;
+            this.frame = [0, 0, 0, 1, 1, 1];
+            this.scaleX = - 1;
+            this.x -= 5;
         }else{
-            player.frame = [0];
-            if(player.y < 562 - 85 - 64){
-                player.y += 5;
+            this.frame = [0];
+            if(this.y < 562 - GROUND_HEIGHT - 64){
+                this.y += 5;
             }else{
-                player.y = 562 - 85 - 64;
+                this.y = 562 - GROUND_HEIGHT - 64;
             }
         }
-
-        // if(game.input.right){
-        //     player.frame = [0, 0, 0, 1, 1, 1];
-        //     player.scaleX = 1;
-        //     player.x += 5;
-        // }else if(game.input.left){
-        //     player.frame = [0, 0, 0, 1, 1, 1];
-        //     player.scaleX = - 1;
-        //     player.x -= 5;
-        // }else if(game.input.a){
-        //     player.frame = [2];
-        // }else{
-        //     player.frame = [0];
-        // }
-    });
-
-    // player.tl.moveBy(400, 0, 180)
-    //     .scaleTo(-1, 1, 10)
-    //     .moveBy(-288, 0, 90)
-    //     .scaleTo(1, 1, 10)
-    //     .loop();
-};
+    }
+});
 
 game.start();
