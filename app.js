@@ -3,6 +3,7 @@ enchant();
 var game = new Core(1000, 562);
 game.preload('images/Player_Sprite.png');
 game.preload('images/jimen.png');
+game.preload('images/bar.png');
 game.fps = 20;
 var GROUND_HEIGHT = 85;
 
@@ -26,7 +27,7 @@ game.onload = function(){
     });
 
     var bar = new Bar(10, 10);
-    // bar.image = game.assets['bar.png'];
+    bar.image = game.assets['mages/bar.png'];
     game.rootScene.addChild(bar);
     bar.maxvalue = 300;
     bar.value = bar.maxvalue;
