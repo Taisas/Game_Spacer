@@ -6,6 +6,7 @@ game.preload('images/jimen.png');
 game.preload('images/bar.png');
 game.preload('images/player_effe.png');
 game.preload('images/flying_bar.png');
+game.preload('images/abtn.png');
 game.fps = 20;
 var GROUND_HEIGHT = 140;
 
@@ -19,7 +20,7 @@ game.onload = function(){
     game.rootScene.backgroundColor = 'black';
 
     var pad = new APad();
-    pad.y = 562 - 120;
+    pad.y = 562 - 110;
     pad.x = 20;
     game.rootScene.addChild(pad);
 
@@ -38,11 +39,30 @@ game.onload = function(){
     var pf = new PlayerEffect();
     var player2 = new Player(200, 350, pad, bar, pf);
 
+    var abutton = new AButton(1000 - 240, 562 - 110, player2);
     document.addEventListener('keydown',function (e) {
         player2.getAction(e.key);
     });
 
 };
+var AButton = Class.create(Sprite, {
+    initialize: function (x, y, target) {
+        Sprite.call(this, 100, 100);
+        this.image = game.assets['images/abtn.png'];
+        game.rootScene.addChild(this);
+        this.frame[0];
+        this.x = x;
+        this.y = y;
+        this.target = target;
+        this.addEventListener('touchstart', function (e) {
+            this.frame = [1];
+            target.getAction('m');
+        }, false);
+        this.addEventListener('touchend', function (e) {
+            this.frame = [0];
+        }, false);
+    }
+});
 
 var PlayerEffect = Class.create(Sprite, {
     initialize: function (player) {
