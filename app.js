@@ -7,7 +7,9 @@ game.preload('images/bar.png');
 game.preload('images/player_effe.png');
 game.preload('images/flying_bar.png');
 game.preload('images/abtn.png');
+game.preload('images/bbtn.png');
 game.preload('images/player_bullet.png');
+game.preload('images/Enemy_Sprite.png');
 game.fps = 20;
 var GROUND_HEIGHT = 140;
 
@@ -40,7 +42,12 @@ game.onload = function(){
     var pf = new PlayerEffect();
     var player2 = new Player(200, 350, pad, bar, pf);
 
+    window.setInterval(function () {
+        var enemy = new Enemy(Math.floor( Math.random() * ( 1000 - 300)), Math.floor( Math.random() * ( 562 - 64 - GROUND_HEIGHT) ));
+    }, '3000');
+
     var abutton = new AButton(1000 - 240, 562 - 110, player2);
+    var bbutton = new BButton(1000 - 140, 562 - 110, player2);
     document.addEventListener('keydown',function (e) {
         player2.getAction(e.key);
         if(e.key == 'b'){
@@ -93,6 +100,24 @@ var AButton = Class.create(Sprite, {
         }, false);
     }
 });
+var BButton = Class.create(Sprite, {
+    initialize: function (x, y, target) {
+        Sprite.call(this, 100, 100);
+        this.image = game.assets['images/bbtn.png'];
+        game.rootScene.addChild(this);
+        this.frame[0];
+        this.x = x;
+        this.y = y;
+        this.target = target;
+        this.addEventListener('touchstart', function (e) {
+            this.frame = [1];
+            var b = new Bullet(this.target.x + 64*this.target.scaleX, this.target.y + 34, this.target.scaleX, 50);
+        }, false);
+        this.addEventListener('touchend', function (e) {
+            this.frame = [0];
+        }, false);
+    }
+});
 
 var PlayerEffect = Class.create(Sprite, {
     initialize: function (player) {
@@ -100,6 +125,37 @@ var PlayerEffect = Class.create(Sprite, {
         this.image = game.assets['images/player_effe.png'];
         this.frame = [0];
         game.rootScene.addChild(this);
+    }
+});
+
+var Enemy = Class.create(Sprite, {
+    initialize: function(tx, y){
+        Sprite.call(this, 64, 64);
+        this.image = game.assets['images/Enemy_Sprite.png'];
+        this.x = 1000 - 64;
+        this.tx = tx;
+        this.y = y;
+        this.mision = true;
+        this.frame = [0];
+        game.rootScene.addChild(this);
+    },
+    onenterframe:function () {
+        if(this.x > this.tx + 30 && this.mision){
+            this.x -= (this.x - this.tx) * 0.08;
+            this.frame = [0, 0, 0, 0, 1, 1, 1, 1];
+        }else {
+            this.mision = false;
+            this.frame = [2];
+            if(this.x > 1000){
+                this.remove();
+            }else{
+                this.x += 20;
+            }
+        }
+    },
+    remove : function () {
+        game.rootScene.removeChild(this);
+        delete this;
     }
 });
 
