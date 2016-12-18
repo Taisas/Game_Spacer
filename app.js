@@ -7,6 +7,7 @@ game.preload('images/bar.png');
 game.preload('images/player_effe.png');
 game.preload('images/flying_bar.png');
 game.preload('images/abtn.png');
+game.preload('images/player_bullet.png');
 game.fps = 20;
 var GROUND_HEIGHT = 140;
 
@@ -42,9 +43,38 @@ game.onload = function(){
     var abutton = new AButton(1000 - 240, 562 - 110, player2);
     document.addEventListener('keydown',function (e) {
         player2.getAction(e.key);
+        if(e.key == 'b'){
+            var b = new Bullet(player2.x + 64*player2.scaleX, player2.y + 34, player2.scaleX, 50);
+        }
     });
 
 };
+
+var Bullet = Class.create(Sprite, {
+    initialize: function (x, y, direction, speed) {
+        Sprite.call(this, 8, 8);
+        this.image = game.assets['images/player_bullet.png'];
+        this.frame = [0];
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+        this.speed = speed;
+        this.addEventListener('enterframe', function (e) {
+            if(this.x > 0 || this.x < 1000){
+                this.x += this.speed * direction;
+            }else{
+                this.remove();
+            }
+        });
+        game.rootScene.addChild(this);
+
+    },
+    remove : function () {
+        game.rootScene.removeChild(this);
+        delete this;
+    }
+});
+
 var AButton = Class.create(Sprite, {
     initialize: function (x, y, target) {
         Sprite.call(this, 100, 100);
@@ -94,6 +124,7 @@ var Player = Class.create(Sprite, {
             this.frame = [2];
             this.scaleX = 1;
             if(this.y <= 562 - GROUND_HEIGHT - 64){
+                //ここでフライト時の移動範囲を制限する
                 this.x += this.speed * this.pad.vx * 2;
                 this.y += this.speed * this.pad.vy * 2;
             }else{
