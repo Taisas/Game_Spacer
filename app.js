@@ -21,10 +21,11 @@ game.onload = function(){
     game.rootScene.addChild(ground);
     game.keybind(80, 'a');
     game.rootScene.backgroundColor = 'black';
+    var enemys = [];
 
     var pad = new APad();
-    pad.y = 562 - 110;
-    pad.x = 20;
+    pad.y = 562 - 120;
+    pad.x = 30;
     game.rootScene.addChild(pad);
 
     var barbg = new Sprite(454, 44);
@@ -44,21 +45,26 @@ game.onload = function(){
 
     window.setInterval(function () {
         var enemy = new Enemy(Math.floor( Math.random() * ( 1000 - 300)), Math.floor( Math.random() * ( 562 - 64 - GROUND_HEIGHT) ));
+        enemy.id = game.frame;
+        enemys[enemy.id] = enemy;
     }, '3000');
 
     var abutton = new AButton(1000 - 240, 562 - 110, player2);
-    var bbutton = new BButton(1000 - 140, 562 - 110, player2);
+    var bbutton = new BButton(1000 - 140, 562 - 110, player2, enemys);
     document.addEventListener('keydown',function (e) {
         player2.getAction(e.key);
         if(e.key == 'b'){
-            var b = new Bullet(player2.x + 64*player2.scaleX, player2.y + 34, player2.scaleX, 50);
+            var b = new Bullet(player2.x + 64*player2.scaleX, player2.y + 34, player2.scaleX, 50, enemys);
+            // var b = new Bullet8x8(player2.x + 64*player2.scaleX, player2.y + 34, player2.scaleX, 50, 0, enemys);
         }
     });
 
 };
 
+//Class-------------------------------------------------------------------------------------------------------------------------------------
+
 var Bullet = Class.create(Sprite, {
-    initialize: function (x, y, direction, speed) {
+    initialize: function (x, y, direction, speed, enemy) {
         Sprite.call(this, 8, 8);
         this.image = game.assets['images/player_bullet.png'];
         this.frame = [0];
@@ -66,9 +72,43 @@ var Bullet = Class.create(Sprite, {
         this.y = y;
         this.direction = direction;
         this.speed = speed;
+        this.enemys = enemy;
         this.addEventListener('enterframe', function (e) {
             if(this.x > 0 || this.x < 1000){
                 this.x += this.speed * direction;
+            }else{
+                this.remove();
+            }
+            for(var i in this.enemys){
+                if(this.enemys[i].intersect(this)){
+                    this.enemys[i].remove();
+                    delete this.enemys[i];
+                }
+            }
+        });
+        game.rootScene.addChild(this);
+
+    },
+    remove : function () {
+        game.rootScene.removeChild(this);
+        delete this;
+    }
+});
+
+var Bullet8x8 = Class.create(Sprite, {
+    initialize: function (x, y, direction, speedX, speedY) {
+        Sprite.call(this, 8, 8);
+        // this.image = game.assets['images/player_bullet.png'];
+        // this.frame = [0];
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+        this.speedX = speedX;
+        this.speedY = speedY;
+        this.addEventListener('enterframe', function (e) {
+            if(this.x > 0 || this.x < 1000 || this.y < 0 || this.y > 562 - GROUND_HEIGHT){
+                this.x += this.speedX * direction;
+                this.y += this.speedY * direction;
             }else{
                 this.remove();
             }
@@ -79,6 +119,23 @@ var Bullet = Class.create(Sprite, {
     remove : function () {
         game.rootScene.removeChild(this);
         delete this;
+    }
+});
+
+var PlayerBullet = Class.create(Bullet8x8, {
+    initialize: function(x, y, direction, speedX, speedY, enemy){
+        Bullet8x8.call(x, y, direction, speedX, speedY);
+        this.image = game.assets['images/player_bullet.png'];
+        this.frame = [0];
+        this.enemys = enemy;
+        this.addEventListener('enterframe', function (e) {
+            for(var i in this.enemys){
+                if(this.enemys[i].intersect(this)){
+                    this.enemys[i].remove();
+                    delete this.enemys[i];
+                }
+            }
+        });
     }
 });
 
@@ -101,7 +158,7 @@ var AButton = Class.create(Sprite, {
     }
 });
 var BButton = Class.create(Sprite, {
-    initialize: function (x, y, target) {
+    initialize: function (x, y, target, enemy) {
         Sprite.call(this, 100, 100);
         this.image = game.assets['images/bbtn.png'];
         game.rootScene.addChild(this);
@@ -111,7 +168,7 @@ var BButton = Class.create(Sprite, {
         this.target = target;
         this.addEventListener('touchstart', function (e) {
             this.frame = [1];
-            var b = new Bullet(this.target.x + 64*this.target.scaleX, this.target.y + 34, this.target.scaleX, 50);
+            var b = new Bullet(this.target.x + 64*this.target.scaleX, this.target.y + 34, this.target.scaleX, 50, enemy);
         }, false);
         this.addEventListener('touchend', function (e) {
             this.frame = [0];
@@ -168,9 +225,9 @@ var Player = Class.create(Sprite, {
         this.pf = pf;
         this.pad = pad;
         this.bar = bar;
-        this.damage = 2;
+        this.damage = 1;
         this.flight = false;
-        this.speed = 5;
+        this.speed = 8;
         game.rootScene.addChild(this);
     },
     onenterframe: function(){
@@ -181,8 +238,16 @@ var Player = Class.create(Sprite, {
             this.scaleX = 1;
             if(this.y <= 562 - GROUND_HEIGHT - 64){
                 //ここでフライト時の移動範囲を制限する
-                this.x += this.speed * this.pad.vx * 2;
-                this.y += this.speed * this.pad.vy * 2;
+                if(this.x < this.speed){
+                    this.x += this.speed;
+                }else if(this.x > 1000 - 64){
+                    this.x = 1000 - 64;
+                }else if(this.y < this.speed){
+                    this.y += this.speed;
+                }else{
+                    this.x += this.speed * this.pad.vx * 2;
+                    this.y += this.speed * this.pad.vy * 2;
+                }
             }else{
                 this.y = 562 - GROUND_HEIGHT - 64;
             }
@@ -195,7 +260,7 @@ var Player = Class.create(Sprite, {
             if(this.y == 562 - GROUND_HEIGHT - 64 ){
                 //左右の入力受付
                 //フライトバーの回復
-                if(this.bar.value < this.bar.maxvalue) this.bar.value += 1;
+                if(this.bar.value < this.bar.maxvalue) this.bar.value += 2;
                 if(this.pad.vx > 0){
                     this.frame = [0, 0, 0, 1, 1, 1];
                     this.scaleX = 1;
